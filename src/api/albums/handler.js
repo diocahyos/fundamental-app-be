@@ -28,6 +28,7 @@ class AlbumsHandler {
   async getAlbumByIdHandler (request, h) {
     const { id } = request.params
     const album = await this._service.getAlbumById(id)
+
     return {
       status: 'success',
       data: {
@@ -56,6 +57,49 @@ class AlbumsHandler {
       status: 'success',
       message: 'Album berhasil dihapus'
     }
+  }
+
+  async postAlbumLikeHandler (request, h) {
+    const { id: userId } = request.auth.credentials
+    const { id } = request.params
+
+    await this._service.checkAlbumById(id)
+    await this._service.checkLikeAlbum(userId, id)
+    await this._service.addAlbumLike(userId, id)
+
+    const response = h.response({
+      status: 'success',
+      message: 'Album berhasil disukai'
+    })
+    response.code(201)
+    return response
+  }
+
+  async deleteAlbumLikeByIdHandler (request, h) {
+    const { id: userId } = request.auth.credentials
+    const { id } = request.params
+    await this._service.deleteAlbumLikeById(userId, id)
+
+    const response = h.response({
+      status: 'success',
+      message: 'Like pada Album berhasil dibatalkan'
+    })
+    return response
+  }
+
+  async getAlbumLikeByIdHandler (request, h) {
+    const { id } = request.params
+    const { likes, isCache } = await this._service.getLikeAlbumById(id)
+
+    const response = h.response({
+      status: 'success',
+      data: { likes }
+    })
+
+    if (isCache) {
+      response.header('X-Data-Source', 'cache')
+    }
+    return response
   }
 }
 
